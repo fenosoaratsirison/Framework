@@ -1,3 +1,7 @@
+<!--
+  Ce fragment est à coller dans le web.xml de l'application qui utilise le framework
+  (entre les balises <web-app> ... </web-app>), juste après <context-param> éventuels.
+-->
 <servlet>
     <servlet-name>FrontControllerServlet</servlet-name>
     <servlet-class>mg.framework.servlet.FrontControllerServlet</servlet-class>
@@ -8,10 +12,9 @@
     </init-param>
 
     <load-on-startup>1</load-on-startup>
-
 </servlet>
 
 <servlet-mapping>
     <servlet-name>FrontControllerServlet</servlet-name>
-    <url-pattern>/</url-pattern>
+    <url-pattern>/*</url-pattern>
 </servlet-mapping>
