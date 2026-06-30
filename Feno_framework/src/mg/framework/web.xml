@@ -1,0 +1,17 @@
+<servlet>
+    <servlet-name>FrontControllerServlet</servlet-name>
+    <servlet-class>mg.framework.servlet.FrontControllerServlet</servlet-class>
+
+    <init-param>
+        <param-name>controller-package</param-name>
+        <param-value>test.controller</param-value>
+    </init-param>
+
+    <load-on-startup>1</load-on-startup>
+
+</servlet>
+
+<servlet-mapping>
+    <servlet-name>FrontControllerServlet</servlet-name>
+    <url-pattern>/</url-pattern>
+</servlet-mapping>
