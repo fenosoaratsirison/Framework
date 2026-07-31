@@ -1,23 +1,5 @@
 # Feno_framework — corrections Sprint 0 / Sprint 1
 
-## Bugs trouvés dans le code original
-
-1. **Noms de fichiers/classes/packages incohérents** (bloquant — empêche la compilation) :
-   - `controller.java` contenait `public @interface Controller` → en Java, le nom du fichier doit être identique au nom de la classe/interface publique (sensible à la casse sous Linux/Tomcat). Renommé en `Controller.java`.
-   - `Classscanner.java` déclarait `package mg.framework.scanner` mais le dossier réel était `scannner` (3 "n"), et la classe s'appelait `ClassScanner` (avec un grand S) dans un fichier `Classscanner.java`. Renommé en `ClassScanner.java` dans le dossier `scanner`.
-
-2. **Le Sprint 1 n'était pas implémenté** dans `FrontControllerServlet` :
-   - Pas de méthode `init()`, donc aucun scan n'était fait au démarrage.
-   - `ClassScanner` n'était jamais appelé.
-   - L'annotation `@Controller` n'était jamais utilisée.
-   - Le routage était fait "en dur" (if/else sur des URLs fixes) au lieu de se baser sur les controllers détectés.
-   - → Ajout du champ `List<Class<?>> controllers`, d'un `init(ServletConfig)` qui lit le paramètre `controller-package` (déclaré dans `web.xml`), appelle `ClassScanner.scanPackage(...)`, filtre les classes avec `isAnnotationPresent(Controller.class)` et les stocke.
-
-3. **Double déclaration du servlet** : la classe portait `@WebServlet(urlPatterns = {"/"})` ET était déclarée dans `web.xml`. Sous Tomcat, cela provoque une erreur au démarrage (`IllegalArgumentException: The servlet ... is already defined`). L'annotation `@WebServlet` a été supprimée : on garde uniquement `web.xml`, car c'est lui qui doit fournir le paramètre `controller-package`.
-
-4. **`ClassScanner` original** : ne gérait que les classes présentes sous forme de `.class` dans un dossier, ne scannait pas les sous-packages, et plantait silencieusement si le `.jar` du framework était posé dans `WEB-INF/lib` (cas réel sous Tomcat). La nouvelle version gère à la fois le scan depuis un dossier (`WEB-INF/classes`) et depuis un `.jar` (`WEB-INF/lib`), et scanne récursivement les sous-packages.
-
-5. **`url-pattern`** : gardé en `/*` comme demandé dans le Sprint 0 (toutes les requêtes passent par le FrontController).
 
 ## Structure livrée
 
