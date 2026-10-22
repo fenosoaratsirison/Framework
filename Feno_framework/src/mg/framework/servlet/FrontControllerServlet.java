@@ -24,7 +24,7 @@ import java.util.Map;
 /**
  * Front Controller : point d'entree unique de toutes les requetes.
  *
- * Historique :
+
  * - Sprint 0 : intercepte toutes les requetes (GET/POST) et affiche l'URL appelee.
  * - Sprint 1 : au demarrage (init), scanne le package indique dans web.xml
  *              et memorise la liste des classes annotees avec @Controller.
@@ -39,11 +39,7 @@ import java.util.Map;
  * - Sprint 5 : la methode Controller peut retourner un ModelView pour
  *              transmettre des donnees a la JSP (request.setAttribute),
  *              en plus de choisir la vue.
- *
- * NOTE : il ne faut PAS annoter cette classe avec @WebServlet en plus de la
- * declaration dans web.xml, sinon Tomcat leve une erreur de double declaration
- * du meme servlet. On garde uniquement la declaration via web.xml afin de
- * pouvoir lui passer le parametre "controller-package".
+ 
  */
 public class FrontControllerServlet extends HttpServlet {
  
