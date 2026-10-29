@@ -5,6 +5,13 @@
     https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
     version="6.0">
 
+    <!-- Sprint 8 : dossier ou MapFile.sauvegarder() enregistre les fichiers.
+         A ADAPTER a ta machine (il est cree automatiquement s'il n'existe pas). -->
+    <context-param>
+        <param-name>upload-dir</param-name>
+        <param-value>/tmp/feno-uploads</param-value>
+    </context-param>
+
     <servlet>
         <servlet-name>FrontControllerServlet</servlet-name>
         <servlet-class>mg.framework.servlet.FrontControllerServlet</servlet-class>
@@ -25,6 +32,13 @@
         </init-param>
 
         <load-on-startup>1</load-on-startup>
+
+        <!-- Sprint 8 : obligatoire pour recevoir des fichiers (multipart/form-data) -->
+        <multipart-config>
+            <max-file-size>10485760</max-file-size>        <!-- 10 Mo par fichier -->
+            <max-request-size>52428800</max-request-size>  <!-- 50 Mo par requete -->
+            <file-size-threshold>1048576</file-size-threshold>
+        </multipart-config>
     </servlet>
 
     <servlet-mapping>

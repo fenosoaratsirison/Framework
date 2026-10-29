@@ -12,7 +12,7 @@ mkdir -p "$BUILD_DIR/WEB-INF/lib"
 echo "Compilation..."
 find src/main/java -name "*.java" > sources.txt
 
-javac -cp "lib/jakarta.servlet-api.jar:lib/mg-framework.jar" \
+javac -parameters -cp "lib/jakarta.servlet-api.jar:lib/mg-framework.jar" \
     -d "$BUILD_DIR/WEB-INF/classes" \
     @sources.txt
 

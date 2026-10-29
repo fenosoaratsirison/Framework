@@ -6,6 +6,11 @@
     <ul>
         <li><a href="joueurs">Liste des joueurs (ModelView)</a></li>
         <li><a href="employe">Formulaire employe (Param + GET/POST)</a></li>
+        <li><a href="employe/formulaire">Sprint 7 : binding de types simples</a></li>
+        <li><a href="employe/formulaire-objet">Sprint 7 bis : binding d'un objet</a></li>
+        <li><a href="employe/formulaire-upload">Sprint 8 : upload de fichiers</a></li>
+        <li><a href="session">Sprint 9 : session</a></li>
+        <li><a href="api/joueurs">Sprint 6 : JSON</a></li>
     </ul>
 </body>
 </html>
