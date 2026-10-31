@@ -18,6 +18,7 @@ import mg.framework.mvc.ModelView;
 import mg.framework.routing.Route;
 import mg.framework.routing.RouteMapping;
 import mg.framework.scanner.ClassScanner;
+import mg.framework.security.Securite;
 import mg.framework.session.MaSession;
 import mg.framework.upload.MapFile;
 
@@ -60,6 +61,9 @@ import java.util.Map;
  *              Map<String, byte[]>. Le dossier "upload-dir" est lu dans web.xml.
  * - Sprint 9 : session. Un parametre MaSession recoit une copie de la HttpSession ;
  *              apres l'appel de la methode, la copie est recopiee dans la vraie session.
+ * - Sprint 10 : authentification. @Authenticated (sur une classe ou une methode) :
+ *              si la session ne contient pas la cle "auth-attribute", redirection vers
+ *              "login-url" (ou 401). Une methode peut aussi retourner "redirect:/page".
  *
  * NOTE : il ne faut PAS annoter cette classe avec @WebServlet en plus de la
  * declaration dans web.xml, sinon Tomcat leve une erreur de double declaration
@@ -72,6 +76,12 @@ public class FrontControllerServlet extends HttpServlet {
     /** Sprint 3/5 : prefixe/suffixe du dossier des vues, configurables via web.xml. Valeurs par defaut. */
     private String viewPrefix = "/WEB-INF/views/";
     private String viewSuffix = ".jsp";
+
+    /** Sprint 10 : cle de session qui prouve que l'utilisateur est connecte (web.xml : "auth-attribute"). */
+    private String authAttribute = "utilisateur";
+
+    /** Sprint 10 : page de connexion ou rediriger les visiteurs non connectes (web.xml : "login-url"). */
+    private String loginUrl = null;
 
     /** Sprint 3 : table de routing URL + verbe HTTP -> (Controller, Method). */
     private final RouteMapping routeMapping = new RouteMapping();
@@ -92,6 +102,17 @@ public class FrontControllerServlet extends HttpServlet {
         String suffix = initParam(config, "view-suffix");
         if (suffix != null && !suffix.isEmpty()) {
             viewSuffix = suffix;
+        }
+
+        // Sprint 10 : configuration de l'authentification
+        String cleAuth = initParam(config, "auth-attribute");
+        if (cleAuth != null && !cleAuth.isEmpty()) {
+            authAttribute = cleAuth;
+        }
+
+        String urlLogin = initParam(config, "login-url");
+        if (urlLogin != null && !urlLogin.isEmpty()) {
+            loginUrl = urlLogin;
         }
 
         // Sprint 8 : dossier ou MapFile.sauvegarder() enregistre les fichiers recus
@@ -201,6 +222,12 @@ public class FrontControllerServlet extends HttpServlet {
             return;
         }
 
+        // Sprint 10 : si la route est protegee (@Authenticated), verifier la connexion
+        // AVANT de creer le controller et de lier les parametres.
+        if (!accesAutorise(route, request, response)) {
+            return;
+        }
+
         try {
             // Sprint 2 : instancier le controller (constructeur sans argument)
             Object instance = route.getController().getDeclaredConstructor().newInstance();
@@ -284,12 +311,56 @@ public class FrontControllerServlet extends HttpServlet {
         response.getWriter().print(json);
     }
 
+    /**
+     * Sprint 10 : retourne true si l'acces est autorise. Sinon ecrit la reponse de refus
+     * (redirection vers la page de connexion ou erreur 401) et retourne false.
+     */
+    private boolean accesAutorise(Route route, HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+
+        if (!Securite.estProtege(route.getMethod(), route.getController())) {
+            return true; // route publique
+        }
+
+        if (Securite.estAuthentifie(request, authAttribute)) {
+            return true; // utilisateur connecte
+        }
+
+        System.out.println("[FrontControllerServlet] Acces refuse (non connecte) : "
+                + route.getController().getSimpleName() + "." + route.getMethod().getName());
+
+        boolean estApi = route.getController().isAnnotationPresent(RestController.class);
+
+        if (estApi) {
+            // Une API repond toujours en JSON, sans redirection
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().print("{\"erreur\":\"Non authentifie\"}");
+        } else if (loginUrl != null) {
+            response.sendRedirect(request.getContextPath() + loginUrl);
+        } else {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("text/html;charset=UTF-8");
+            response.getWriter().println("<h1>401</h1><p>Vous devez etre connecte.</p>");
+        }
+
+        return false;
+    }
+
     private void forward(String vue, HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         if (vue == null || vue.isEmpty()) {
             erreur500(response, "La methode Controller n'a pas precise de vue (vue == null).", null);
             return;
         }
+
+        // Sprint 10 : "redirect:/page" -> redirection HTTP au lieu d'un forward vers une JSP
+        // (utile apres une connexion : on evite de reposter le formulaire en rechargeant la page)
+        if (vue.startsWith("redirect:")) {
+            response.sendRedirect(request.getContextPath() + vue.substring("redirect:".length()));
+            return;
+        }
+
         request.getRequestDispatcher(viewPrefix + vue + viewSuffix).forward(request, response);
     }
 
