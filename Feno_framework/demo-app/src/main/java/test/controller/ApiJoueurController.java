@@ -3,6 +3,7 @@ package test.controller;
 import java.util.Arrays;
 import java.util.List;
 
+import mg.framework.annotation.Authenticated;
 import mg.framework.annotation.HttpMethod;
 import mg.framework.annotation.Param;
 import mg.framework.annotation.RestController;
@@ -44,6 +45,18 @@ public class ApiJoueurController {
     @Url(value = "/api/joueur", method = HttpMethod.GET)
     public JoueurDto joueur(@Param("nom") String nom) {
         return new JoueurDto(nom, true);
+    }
+
+    /**
+     * Demo Sprint 10 : @Authenticated sur une METHODE seulement. Les autres methodes
+     * de ce Controller restent publiques. Sans connexion : erreur 401 en JSON
+     * (c'est un @RestController, donc pas de redirection).
+     * -> GET /api/secret
+     */
+    @Authenticated
+    @Url(value = "/api/secret", method = HttpMethod.GET)
+    public String secret() {
+        return "{\"message\":\"Donnees reservees aux utilisateurs connectes\"}";
     }
 
     /** Petit POJO pour montrer la conversion automatique d'un objet en JSON. */

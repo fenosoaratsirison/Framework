@@ -31,6 +31,19 @@
             <param-value>.jsp</param-value>
         </init-param>
 
+        <!-- Sprint 10 : authentification -->
+        <init-param>
+            <!-- cle de session qui prouve que l'utilisateur est connecte (voir AuthController.CLE_AUTH) -->
+            <param-name>auth-attribute</param-name>
+            <param-value>utilisateurConnecte</param-value>
+        </init-param>
+
+        <init-param>
+            <!-- page ou rediriger un visiteur non connecte -->
+            <param-name>login-url</param-name>
+            <param-value>/login</param-value>
+        </init-param>
+
         <load-on-startup>1</load-on-startup>
 
         <!-- Sprint 8 : obligatoire pour recevoir des fichiers (multipart/form-data) -->

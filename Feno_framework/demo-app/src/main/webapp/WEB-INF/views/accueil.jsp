@@ -10,6 +10,8 @@
         <li><a href="employe/formulaire-objet">Sprint 7 bis : binding d'un objet</a></li>
         <li><a href="employe/formulaire-upload">Sprint 8 : upload de fichiers</a></li>
         <li><a href="session">Sprint 9 : session</a></li>
+        <li><a href="profil">Sprint 10 : page protegee (connexion requise)</a></li>
+        <li><a href="api/secret">Sprint 10 : API protegee (401 si non connecte)</a></li>
         <li><a href="api/joueurs">Sprint 6 : JSON</a></li>
     </ul>
 </body>
