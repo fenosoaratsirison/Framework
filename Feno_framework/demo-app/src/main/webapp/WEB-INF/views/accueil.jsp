@@ -12,6 +12,8 @@
         <li><a href="session">Sprint 9 : session</a></li>
         <li><a href="profil">Sprint 10 : page protegee (connexion requise)</a></li>
         <li><a href="api/secret">Sprint 10 : API protegee (401 si non connecte)</a></li>
+        <li><a href="admin">Sprint 10 bis : espace admin (@Role("admin") : 401/redirection, 403 ou OK)</a></li>
+        <li><a href="api/admin">Sprint 10 bis : API admin/manager (JSON, 401 ou 403)</a></li>
         <li><a href="api/joueurs">Sprint 6 : JSON</a></li>
     </ul>
 </body>

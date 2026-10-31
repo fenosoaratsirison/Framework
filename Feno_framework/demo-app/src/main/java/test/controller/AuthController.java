@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Demo Sprint 10 : connexion / deconnexion.
+ * Demo Sprint 10 / 10 bis : connexion / deconnexion.
  *
  * Ce Controller est PUBLIC (pas de @Authenticated) : il faut bien pouvoir
  * se connecter avant d'etre connecte.
@@ -21,7 +21,12 @@ import java.util.Map;
  * la cle CLE_AUTH. Cette cle doit etre la meme que le parametre "auth-attribute"
  * du web.xml.
  *
- * ATTENTION : les utilisateurs et mots de passe sont ecrits en dur ici uniquement
+ * Sprint 10 bis : a la connexion on met aussi le ROLE de l'utilisateur en session, sous
+ * la cle CLE_ROLE (meme valeur que le parametre "role-attribute" du web.xml).
+ * Le role vient du SERVEUR (ici la table UTILISATEURS, plus tard la base de donnees),
+ * jamais du formulaire : sinon n'importe qui se declarerait admin.
+ *
+ * ATTENTION : les utilisateurs, mots de passe et roles sont ecrits en dur ici uniquement
  * pour la demo. Dans une vraie application, ils viennent de la base de donnees
  * et les mots de passe sont haches.
  */
@@ -30,11 +35,18 @@ public class AuthController {
 
     public static final String CLE_AUTH = "utilisateurConnecte";
 
-    private static final Map<String, String> UTILISATEURS = new HashMap<>();
+    /** Sprint 10 bis : cle de session du role (doit etre egale a "role-attribute" du web.xml). */
+    public static final String CLE_ROLE = "role";
+
+    private static final Map<String, String> UTILISATEURS = new HashMap<>();   // nom -> mot de passe
+    private static final Map<String, String> ROLES = new HashMap<>();          // nom -> role
 
     static {
         UTILISATEURS.put("rakoto", "1234");
+        ROLES.put("rakoto", "admin");
+
         UTILISATEURS.put("rabe", "abcd");
+        ROLES.put("rabe", "user");
     }
 
     @Url(value = "/login", method = HttpMethod.GET)
@@ -58,12 +70,14 @@ public class AuthController {
         request.changeSessionId();
 
         session.setAttribute(CLE_AUTH, nom);
+        session.setAttribute(CLE_ROLE, ROLES.get(nom));   // Sprint 10 bis : role lu cote serveur
         return "redirect:/profil";
     }
 
     @Url(value = "/logout", method = HttpMethod.POST)
     public String deconnecter(MaSession session) {
         session.removeAttribute(CLE_AUTH);
+        session.removeAttribute(CLE_ROLE);
         return "redirect:/login";
     }
 }

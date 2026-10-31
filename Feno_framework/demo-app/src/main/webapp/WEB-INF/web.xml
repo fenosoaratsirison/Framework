@@ -39,6 +39,12 @@
         </init-param>
 
         <init-param>
+            <!-- Sprint 10 bis : cle de session qui contient le role (voir AuthController.CLE_ROLE) -->
+            <param-name>role-attribute</param-name>
+            <param-value>role</param-value>
+        </init-param>
+
+        <init-param>
             <!-- page ou rediriger un visiteur non connecte -->
             <param-name>login-url</param-name>
             <param-value>/login</param-value>
