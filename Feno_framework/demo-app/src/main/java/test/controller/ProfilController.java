@@ -20,6 +20,7 @@ public class ProfilController {
     public ModelView profil(MaSession session) {
         ModelView mv = new ModelView("profil");
         mv.addObject("nom", session.getAttribute(AuthController.CLE_AUTH));
+        mv.addObject("role", session.getAttribute(AuthController.CLE_ROLE));
         return mv;
     }
 }

@@ -64,6 +64,10 @@ import java.util.Map;
  * - Sprint 10 : authentification. @Authenticated (sur une classe ou une methode) :
  *              si la session ne contient pas la cle "auth-attribute", redirection vers
  *              "login-url" (ou 401). Une methode peut aussi retourner "redirect:/page".
+ * - Sprint 10 bis : autorisations par role. @Role("admin") (classe ou methode, la methode
+ *              gagne) : pas connecte -> meme reponse qu'au Sprint 10 (redirection / 401) ;
+ *              connecte mais role absent de la liste -> erreur 403. Le role est lu dans
+ *              la session sous la cle "role-attribute" (web.xml).
  *
  * NOTE : il ne faut PAS annoter cette classe avec @WebServlet en plus de la
  * declaration dans web.xml, sinon Tomcat leve une erreur de double declaration
@@ -79,6 +83,9 @@ public class FrontControllerServlet extends HttpServlet {
 
     /** Sprint 10 : cle de session qui prouve que l'utilisateur est connecte (web.xml : "auth-attribute"). */
     private String authAttribute = "utilisateur";
+
+    /** Sprint 10 bis : cle de session qui contient le role de l'utilisateur (web.xml : "role-attribute"). */
+    private String roleAttribute = "role";
 
     /** Sprint 10 : page de connexion ou rediriger les visiteurs non connectes (web.xml : "login-url"). */
     private String loginUrl = null;
@@ -108,6 +115,12 @@ public class FrontControllerServlet extends HttpServlet {
         String cleAuth = initParam(config, "auth-attribute");
         if (cleAuth != null && !cleAuth.isEmpty()) {
             authAttribute = cleAuth;
+        }
+
+        // Sprint 10 bis : cle de session du role
+        String cleRole = initParam(config, "role-attribute");
+        if (cleRole != null && !cleRole.isEmpty()) {
+            roleAttribute = cleRole;
         }
 
         String urlLogin = initParam(config, "login-url");
@@ -222,8 +235,8 @@ public class FrontControllerServlet extends HttpServlet {
             return;
         }
 
-        // Sprint 10 : si la route est protegee (@Authenticated), verifier la connexion
-        // AVANT de creer le controller et de lier les parametres.
+        // Sprint 10 / 10 bis : si la route est protegee (@Authenticated ou @Role), verifier la
+        // connexion puis le role AVANT de creer le controller et de lier les parametres.
         if (!accesAutorise(route, request, response)) {
             return;
         }
@@ -312,8 +325,10 @@ public class FrontControllerServlet extends HttpServlet {
     }
 
     /**
-     * Sprint 10 : retourne true si l'acces est autorise. Sinon ecrit la reponse de refus
-     * (redirection vers la page de connexion ou erreur 401) et retourne false.
+     * Sprint 10 / 10 bis : retourne true si l'acces est autorise. Sinon ecrit la reponse de
+     * refus et retourne false. Deux refus bien distincts :
+     *  - 401 / redirection : pas identifie (pas connecte) ;
+     *  - 403               : identifie mais pas autorise (mauvais role).
      */
     private boolean accesAutorise(Route route, HttpServletRequest request, HttpServletResponse response)
             throws IOException {
@@ -322,28 +337,44 @@ public class FrontControllerServlet extends HttpServlet {
             return true; // route publique
         }
 
-        if (Securite.estAuthentifie(request, authAttribute)) {
-            return true; // utilisateur connecte
-        }
-
-        System.out.println("[FrontControllerServlet] Acces refuse (non connecte) : "
-                + route.getController().getSimpleName() + "." + route.getMethod().getName());
-
+        String nomRoute = route.getController().getSimpleName() + "." + route.getMethod().getName();
         boolean estApi = route.getController().isAnnotationPresent(RestController.class);
 
-        if (estApi) {
-            // Une API repond toujours en JSON, sans redirection
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().print("{\"erreur\":\"Non authentifie\"}");
-        } else if (loginUrl != null) {
-            response.sendRedirect(request.getContextPath() + loginUrl);
-        } else {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("text/html;charset=UTF-8");
-            response.getWriter().println("<h1>401</h1><p>Vous devez etre connecte.</p>");
+        // 1. Identifie ? (sinon 401 ou redirection vers la page de connexion)
+        if (!Securite.estAuthentifie(request, authAttribute)) {
+            System.out.println("[FrontControllerServlet] Acces refuse (non connecte) : " + nomRoute);
+
+            if (estApi) {
+                // Une API repond toujours en JSON, sans redirection
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().print("{\"erreur\":\"Non authentifie\"}");
+            } else if (loginUrl != null) {
+                response.sendRedirect(request.getContextPath() + loginUrl);
+            } else {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("text/html;charset=UTF-8");
+                response.getWriter().println("<h1>401</h1><p>Vous devez etre connecte.</p>");
+            }
+            return false;
         }
 
+        // 2. Autorise ? (Sprint 10 bis) Seulement si un @Role s'applique a cette route.
+        String[] roles = Securite.rolesAutorises(route.getMethod(), route.getController());
+        if (roles == null || Securite.aUnRoleAutorise(request, roleAttribute, roles)) {
+            return true;
+        }
+
+        System.out.println("[FrontControllerServlet] Acces refuse (mauvais role, 403) : " + nomRoute);
+
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        if (estApi) {
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().print("{\"erreur\":\"Acces interdit\"}");
+        } else {
+            response.setContentType("text/html;charset=UTF-8");
+            response.getWriter().println("<h1>403</h1><p>Acces interdit : votre role ne permet pas d'acceder a cette page.</p>");
+        }
         return false;
     }
 

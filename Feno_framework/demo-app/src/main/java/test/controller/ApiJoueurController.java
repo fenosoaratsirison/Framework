@@ -7,6 +7,7 @@ import mg.framework.annotation.Authenticated;
 import mg.framework.annotation.HttpMethod;
 import mg.framework.annotation.Param;
 import mg.framework.annotation.RestController;
+import mg.framework.annotation.Role;
 import mg.framework.annotation.Url;
 
 /**
@@ -57,6 +58,17 @@ public class ApiJoueurController {
     @Url(value = "/api/secret", method = HttpMethod.GET)
     public String secret() {
         return "{\"message\":\"Donnees reservees aux utilisateurs connectes\"}";
+    }
+
+    /**
+     * Demo Sprint 10 bis : @Role sur une METHODE d'un @RestController. Plusieurs roles possibles.
+     * Pas connecte -> 401 JSON ; connecte avec un autre role -> 403 JSON.
+     * -> GET /api/admin
+     */
+    @Role({ "admin", "manager" })
+    @Url(value = "/api/admin", method = HttpMethod.GET)
+    public String admin() {
+        return "{\"message\":\"Donnees reservees aux admins et managers\"}";
     }
 
     /** Petit POJO pour montrer la conversion automatique d'un objet en JSON. */
